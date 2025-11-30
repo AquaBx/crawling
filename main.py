@@ -64,9 +64,13 @@ def main():
         L.load_session_from_file(USER)
         to_parcours = session.execute_read(get_todo)
 
+        print("to_parcours", len(to_parcours))
+
         if (len(to_parcours) == 0):
             x = instaloader.Profile.from_username(L.context, USER)
             to_parcours.add(x.userid)
+        
+        print("to_parcours", len(to_parcours))
 
         while len(to_parcours) > 0:
             profileid = to_parcours.pop()
