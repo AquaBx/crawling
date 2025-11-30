@@ -2,6 +2,8 @@ import time
 import instaloader
 from neo4j import GraphDatabase
 import os
+import logging
+logger = logging.getLogger(__name__)
 
 USER = os.getenv("USER")
 PASSWD = os.getenv("PASSWD")
@@ -64,17 +66,17 @@ def main():
         L.load_session_from_file(USER)
         to_parcours = session.execute_read(get_todo)
 
-        print("to_parcours", len(to_parcours))
+        logger.info("to_parcours", len(to_parcours))
 
         if (len(to_parcours) == 0):
             x = instaloader.Profile.from_username(L.context, USER)
             to_parcours.add(x.userid)
         
-        print("to_parcours", len(to_parcours))
+        logger.info("to_parcours", len(to_parcours))
 
         while len(to_parcours) > 0:
             profileid = to_parcours.pop()
-            print("profile ",profileid)
+            logger.info("profile ",profileid)
             profile = instaloader.Profile.from_id(L.context, profileid)
 
             if is_viewable(profile):
@@ -87,10 +89,10 @@ def main():
 
             i = (i + 1)%2
             if (len(to_parcours) == 0):
-                print("fetching neo4j")
+                logger.info("fetching neo4j")
                 to_parcours = session.execute_read(get_todo)
             if i == 0:
-                print("sleeping")
+                logger.info("sleeping")
                 time.sleep(340)
 
 if __name__ == "__main__":
