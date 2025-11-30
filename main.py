@@ -67,6 +67,7 @@ def main():
         to_parcours = session.execute_read(get_todo)
 
         logger.info("to_parcours", len(to_parcours))
+        print("cc")
 
         if (len(to_parcours) == 0):
             x = instaloader.Profile.from_username(L.context, USER)
@@ -80,8 +81,22 @@ def main():
             profile = instaloader.Profile.from_id(L.context, profileid)
 
             if is_viewable(profile):
-                followers = set(x.userid for x in profile.get_followers()) if profile.followers < 5000 else set()
-                followees = set(x.userid for x in profile.get_followees()) if profile.followees < 5000 else set()
+                followers = set() 
+                i = 0
+                for x in profile.get_followers():
+                    followers.add(x.userid)
+                    i+=1
+                    if i > 1000:
+                        break
+                
+                followees = set()
+
+                i = 0
+                for x in profile.get_followees():
+                    followees.add(x.userid)
+                    i+=1
+                    if i > 1000:
+                        break
             else:
                 followers,followees = set(),set()
             
