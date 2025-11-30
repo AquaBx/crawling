@@ -63,9 +63,10 @@ def main():
     with driver.session() as session:
         i = 0
         to_parcours = session.execute_read(get_todo)
-        
+        print(USER,PASSWD)
+        L.login(USER, PASSWD)
+
         if (len(to_parcours) == 0):
-            L.login(USER, PASSWD)
             x = instaloader.Profile.from_username(L.context, USER)
             to_parcours.add(x.userid)
 
