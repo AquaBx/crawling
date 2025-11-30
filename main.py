@@ -14,7 +14,7 @@ NEO4_PASSWD = os.getenv("NEO4_PASSWD")
 def create_user1(tx, userid:int):
     tx.run("""
     MERGE (u:User {id: $userid})
-    SET u.dt = datetime()
+    SET u.dt = datetime({epochmillis: 0})
     """, userid=userid)
 
 def create_user2(tx, userid:int):
@@ -29,11 +29,11 @@ def create_relationship(tx, user1:int, user2:int):
         MATCH (a:User {id: $u1})
         MATCH (b:User {id: $u2})
         MERGE (a)-[rel:FOLLOWS]->(b)
-        SET rel.dt = datetime()
+        SET rel.dt = datetime({epochmillis: 0})
     """, u1=user1, u2=user2)
 
 def get_todo(tx):
-    result = tx.run("MATCH (a:User) ORDER BY a.dt LIMIT 100 RETURN a.id")
+    result = tx.run("MATCH (a:User) ORDER BY a.dt LIMIT 25 RETURN a.id")
     return set([record["a.id"] for record in result])
 
 def is_viewable(profile):
