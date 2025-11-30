@@ -11,20 +11,20 @@ NEO4_USER = os.getenv("NEO4_USER")
 NEO4_URL = os.getenv("NEO4_URL")
 NEO4_PASSWD = os.getenv("NEO4_PASSWD")
 
-def create_user1(tx, userid:str):
+def create_user1(tx, userid:int):
     tx.run("""
     MERGE (u:User {id: $userid})
     SET u.dt = datetime()
     """, userid=userid)
 
-def create_user2(tx, userid:str):
+def create_user2(tx, userid:int):
     tx.run("""
     MERGE (u:User {id: $userid})
     ON CREATE
         SET u.dt = 0
     """, userid=userid)
 
-def create_relationship(tx, user1:str, user2:str):
+def create_relationship(tx, user1:int, user2:int):
     tx.run("""
         MATCH (a:User {id: $u1})
         MATCH (b:User {id: $u2})
@@ -35,17 +35,6 @@ def create_relationship(tx, user1:str, user2:str):
 def get_todo(tx):
     result = tx.run("MATCH (a:User) ORDER BY a.dt LIMIT 100 RETURN a.id")
     return set([record["a.id"] for record in result])
-
-def add(session, user: str, followers: set, followees: set):
-    session.execute_write(create_user1, user)
-
-    for follower in followers:
-        session.execute_write(create_user2, follower)
-        session.execute_write(create_relationship, follower, user)
-
-    for followee in followees:
-        session.execute_write(create_user2, followee)
-        session.execute_write(create_relationship, user, followee)
 
 def is_viewable(profile):
     if profile.followers > 10000:
@@ -80,27 +69,24 @@ def main():
             logger.info("profile ",profileid)
             profile = instaloader.Profile.from_id(L.context, profileid)
 
+            session.execute_write(create_user1, profileid)
+
             if is_viewable(profile):
-                followers = set() 
-                i = 0
-                for x in profile.get_followers():
-                    followers.add(x.userid)
-                    i+=1
-                    if i > 1000:
+                y = 0
+                for follower in profile.get_followers():
+                    session.execute_write(create_user2, follower.userid)
+                    session.execute_write(create_relationship, follower.userid, profileid)
+                    y+=1
+                    if y > 1000:
                         break
                 
-                followees = set()
-
-                i = 0
-                for x in profile.get_followees():
-                    followees.add(x.userid)
-                    i+=1
-                    if i > 1000:
+                y = 0
+                for followee in profile.get_followees():
+                    session.execute_write(create_user2, followee.userid)
+                    session.execute_write(create_relationship, profileid, followee.userid)
+                    y+=1
+                    if y > 1000:
                         break
-            else:
-                followers,followees = set(),set()
-            
-            add(session,profileid,followers,followees)
 
             i = (i + 1)%2
             if (len(to_parcours) == 0):
