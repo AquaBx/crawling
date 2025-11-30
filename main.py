@@ -70,6 +70,7 @@ def main():
 
         while len(to_parcours) > 0:
             profileid = to_parcours.pop()
+            print("profile ",profileid)
             profile = instaloader.Profile.from_id(L.context, profileid)
 
             if is_viewable(profile):
@@ -82,8 +83,10 @@ def main():
 
             i = (i + 1)%2
             if (len(to_parcours) == 0):
+                print("fetching neo4j")
                 to_parcours = session.execute_read(get_todo)
             if i == 0:
+                print("sleeping")
                 time.sleep(340)
 
 if __name__ == "__main__":
