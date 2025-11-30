@@ -9,9 +9,6 @@ NEO4_USER = os.getenv("NEO4_USER")
 NEO4_URL = os.getenv("NEO4_URL")
 NEO4_PASSWD = os.getenv("NEO4_PASSWD")
 
-driver = GraphDatabase.driver(NEO4_URL, auth=(NEO4_USER, NEO4_PASSWD))
-L = instaloader.Instaloader()
-
 def create_user1(tx, userid:str):
     tx.run("""
     MERGE (u:User {id: $userid})
@@ -60,11 +57,15 @@ def is_viewable(profile):
     return False
 
 def main():
+    driver = GraphDatabase.driver(NEO4_URL, auth=(NEO4_USER, NEO4_PASSWD))
     with driver.session() as session:
         i = 0
+        cmd = "instaloader --login {} -p {}".format(USER,PASSWD)
+        os.system(cmd)
+        
+        L = instaloader.Instaloader()
+        L.load_session_from_file(USER)
         to_parcours = session.execute_read(get_todo)
-        print(USER,PASSWD)
-        L.login(USER, PASSWD)
 
         if (len(to_parcours) == 0):
             x = instaloader.Profile.from_username(L.context, USER)
