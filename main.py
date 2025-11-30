@@ -59,10 +59,7 @@ def is_viewable(profile):
 def main():
     driver = GraphDatabase.driver(NEO4_URL, auth=(NEO4_USER, NEO4_PASSWD))
     with driver.session() as session:
-        i = 0
-        cmd = "instaloader --login {} -p {}".format(USER,PASSWD)
-        os.system(cmd)
-        
+        i = 0        
         L = instaloader.Instaloader()
         L.load_session_from_file(USER)
         to_parcours = session.execute_read(get_todo)
