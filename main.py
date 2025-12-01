@@ -11,18 +11,19 @@ NEO4_USER = os.getenv("NEO4_USER")
 NEO4_URL = os.getenv("NEO4_URL")
 NEO4_PASSWD = os.getenv("NEO4_PASSWD")
 
-def create_user1(tx, userid:int):
+def create_user1(tx, userid:int, username:str):
     tx.run("""
     MERGE (u:User {id: $userid})
-    SET u.dt = datetime()
-    """, userid=userid)
+    SET u.dt = datetime(),u.username = $username
+    """, userid=userid, username=username)
 
-def create_user2(tx, userid:int):
+def create_user2(tx, userid:int, username:str):
     tx.run("""
     MERGE (u:User {id: $userid})
+    SET u.username = $username
     ON CREATE
         SET u.dt = datetime({epochmillis: 0})
-    """, userid=userid)
+    """, userid=userid, username=username)
 
 def create_relationship(tx, user1:int, user2:int):
     tx.run("""
@@ -68,12 +69,12 @@ def main():
             logger.info("profile ",profileid)
             profile = instaloader.Profile.from_id(L.context, profileid)
 
-            session.execute_write(create_user1, profileid)
+            session.execute_write(create_user1, profileid, profile.username)
 
             if is_viewable(profile):
                 y = 0
                 for follower in profile.get_followers():
-                    session.execute_write(create_user2, follower.userid)
+                    session.execute_write(create_user2, follower.userid, follower.username)
                     session.execute_write(create_relationship, follower.userid, profileid)
                     y+=1
                     if y > 1000:
@@ -81,7 +82,7 @@ def main():
                 
                 y = 0
                 for followee in profile.get_followees():
-                    session.execute_write(create_user2, followee.userid)
+                    session.execute_write(create_user2, followee.userid, followee.username)
                     session.execute_write(create_relationship, profileid, followee.userid)
                     y+=1
                     if y > 1000:
