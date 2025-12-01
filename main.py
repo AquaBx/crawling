@@ -14,7 +14,7 @@ NEO4_PASSWD = os.getenv("NEO4_PASSWD")
 def create_user1(tx, userid:int):
     tx.run("""
     MERGE (u:User {id: $userid})
-    SET u.dt = datetime({epochmillis: 0})
+    SET u.dt = datetime()
     """, userid=userid)
 
 def create_user2(tx, userid:int):
@@ -29,7 +29,7 @@ def create_relationship(tx, user1:int, user2:int):
         MATCH (a:User {id: $u1})
         MATCH (b:User {id: $u2})
         MERGE (a)-[rel:FOLLOWS]->(b)
-        SET rel.dt = datetime({epochmillis: 0})
+        SET rel.dt = datetime()
     """, u1=user1, u2=user2)
 
 def get_todo(tx):
