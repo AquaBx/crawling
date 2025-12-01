@@ -21,7 +21,7 @@ def create_user2(tx, userid:int):
     tx.run("""
     MERGE (u:User {id: $userid})
     ON CREATE
-        SET u.dt = 0
+        SET u.dt = datetime({epochmillis: 0})
     """, userid=userid)
 
 def create_relationship(tx, user1:int, user2:int):
