@@ -20,9 +20,10 @@ def create_user1(tx, userid:int, username:str):
 def create_user2(tx, userid:int, username:str):
     tx.run("""
     MERGE (u:User {id: $userid})
-    SET u.username = $username
     ON CREATE
-        SET u.dt = datetime({epochmillis: 0})
+        SET u.username = $username , u.dt = datetime({epochmillis: 0})
+    ON MATCH
+        SET u.username = $username
     """, userid=userid, username=username)
 
 def create_relationship(tx, user1:int, user2:int):
