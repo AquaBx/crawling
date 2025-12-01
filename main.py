@@ -100,7 +100,7 @@ def main():
                     session.execute_write(create_user2, follower.userid, follower.username)
                     session.execute_write(create_relationship, follower.userid, profileid)
                     y+=1
-                    if y > 1000:
+                    if y > 100:
                         break
                 logger.info("Download Followees")
                 y = 0
@@ -108,7 +108,7 @@ def main():
                     session.execute_write(create_user2, followee.userid, followee.username)
                     session.execute_write(create_relationship, profileid, followee.userid)
                     y+=1
-                    if y > 1000:
+                    if y > 100:
                         break
                 time.sleep(180)
             else : 
