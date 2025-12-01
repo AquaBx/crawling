@@ -2,14 +2,36 @@ import time
 import instaloader
 from neo4j import GraphDatabase
 import os
+import requests
+from PIL import Image
+from io import BytesIO
 import logging
-logger = logging.getLogger(__name__)
+import sys
+
+logger = logging.getLogger(__name__) 
+logger.setLevel(logging.INFO)
+console_handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+console_handler.setFormatter(formatter)
+if not logger.handlers:
+    logger.addHandler(console_handler)
+
+def download_pp(url:str, dir:str):
+    reponse = requests.get(url)
+    reponse.raise_for_status()
+    image_bytes = BytesIO(reponse.content)
+    image_pil = Image.open(image_bytes)
+
+    image_pil.save( dir,  format="AVIF" )
 
 USER = os.getenv("USER")
 PASSWD = os.getenv("PASSWD")
 NEO4_USER = os.getenv("NEO4_USER")
 NEO4_URL = os.getenv("NEO4_URL")
 NEO4_PASSWD = os.getenv("NEO4_PASSWD")
+OUTDIR = os.getenv("OUTDIR")
 
 def create_user1(tx, userid:int, username:str):
     tx.run("""
@@ -56,31 +78,31 @@ def main():
         L.load_session_from_file(USER)
         to_parcours = session.execute_read(get_todo)
 
-        logger.info("to_parcours", len(to_parcours))
-        print("cc")
-
         if (len(to_parcours) == 0):
             x = instaloader.Profile.from_username(L.context, USER)
             to_parcours.add(x.userid)
         
-        logger.info("to_parcours", len(to_parcours))
-
         while len(to_parcours) > 0:
             profileid = to_parcours.pop()
-            logger.info("profile ",profileid)
+            logger.info("New Profil")
             profile = instaloader.Profile.from_id(L.context, profileid)
 
+            logger.info("Download Profil")
             session.execute_write(create_user1, profileid, profile.username)
+            logger.info("Download PP")
+            download_pp(profile.profile_pic_url, "{}/{}.avif".format(OUTDIR,profileid))
 
             if is_viewable(profile):
                 y = 0
+                logger.info("Download Followers")
+
                 for follower in profile.get_followers():
                     session.execute_write(create_user2, follower.userid, follower.username)
                     session.execute_write(create_relationship, follower.userid, profileid)
                     y+=1
                     if y > 1000:
                         break
-                
+                logger.info("Download Followees")
                 y = 0
                 for followee in profile.get_followees():
                     session.execute_write(create_user2, followee.userid, followee.username)
@@ -93,8 +115,16 @@ def main():
                 time.sleep(10)
 
             if (len(to_parcours) == 0):
-                logger.info("fetching neo4j")
+                logger.info("Fetching new profiles")
                 to_parcours = session.execute_read(get_todo)
 
 if __name__ == "__main__":
-    main()
+    logger.info("Start Application")
+    try:
+        main()
+    except Exception as e: 
+        logger.error(e)
+        logger.error("Will sleep undefinitely")
+
+        while True:
+            time.sleep(10)
