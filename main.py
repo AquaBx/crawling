@@ -50,7 +50,6 @@ def is_viewable(profile):
 def main():
     driver = GraphDatabase.driver(NEO4_URL, auth=(NEO4_USER, NEO4_PASSWD))
     with driver.session() as session:
-        i = 0        
         L = instaloader.Instaloader()
         L.load_session_from_file(USER)
         to_parcours = session.execute_read(get_todo)
@@ -87,14 +86,13 @@ def main():
                     y+=1
                     if y > 1000:
                         break
+                time.sleep(180)
+            else : 
+                time.sleep(10)
 
-            i = (i + 1)%2
             if (len(to_parcours) == 0):
                 logger.info("fetching neo4j")
                 to_parcours = session.execute_read(get_todo)
-            if i == 0:
-                logger.info("sleeping")
-                time.sleep(340)
 
 if __name__ == "__main__":
     main()
